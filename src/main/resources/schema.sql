@@ -1,9 +1,9 @@
 -- Create database
-CREATE DATABASE ecommerce;
+CREATE DATABASE IF NOT EXISTS ecommerce;
 USE ecommerce;
 
 -- Create orders table
-CREATE TABLE orders (
+CREATE TABLE  IF NOT EXISTS  orders (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     order_number VARCHAR(50) NOT NULL,
     created_at DATETIME NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE orders (
 );
 
 -- Create products table
-CREATE TABLE products (
+CREATE TABLE  IF NOT EXISTS  products (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     price DOUBLE NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE products (
 );
 
 -- Create items table
-CREATE TABLE items (
+CREATE TABLE  IF NOT EXISTS  items (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     quantity INT NOT NULL,
     order_id BIGINT NOT NULL,

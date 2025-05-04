@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "order_items")
+@Table(name = "items")
 @Getter
 @Setter
 public class Item extends AuditableEntity{

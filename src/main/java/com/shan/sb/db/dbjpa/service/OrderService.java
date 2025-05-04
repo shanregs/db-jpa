@@ -1,6 +1,7 @@
 package com.shan.sb.db.dbjpa.service;
 
 import com.shan.sb.db.dbjpa.dto.OrderDTO;
+import com.shan.sb.db.dbjpa.dto.PagedResponse;
 import com.shan.sb.db.dbjpa.entity.Order;
 import com.shan.sb.db.dbjpa.entity.Item;
 import com.shan.sb.db.dbjpa.entity.Product;
@@ -8,11 +9,14 @@ import com.shan.sb.db.dbjpa.exception.InsufficientStockException;
 import com.shan.sb.db.dbjpa.exception.ResourceNotFoundException;
 import com.shan.sb.db.dbjpa.mapper.ItemMapper;
 import com.shan.sb.db.dbjpa.mapper.OrderMapper;
+import com.shan.sb.db.dbjpa.notification.MailSender;
 import com.shan.sb.db.dbjpa.repository.OrderRepository;
 import com.shan.sb.db.dbjpa.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -25,6 +29,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final ItemService itemService;
+    private final MailSender mailSender;
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
@@ -35,7 +40,7 @@ public class OrderService {
         Order order = new Order();
         order.setOrderNumber(orderDTO.getOrderNumber());
 
-        List<Item> items = getOrderLineItems(orderDTO, order);
+        List<Item> items = getOrderItems(orderDTO, order);
 
         order.setItems(items);
         orderRepository.save(order);
@@ -46,8 +51,25 @@ public class OrderService {
         orderDTO.setId(order.getId());
         orderDTO.setCreatedAt(order.getCreatedAt());
         orderDTO.setUpdatedAt(order.getUpdatedAt());
-        sendOrderConfirmationEmail(order.getId());
+        mailSender.sendOrderConfirmationEmail(order.getId());
         return orderDTO;
+    }
+    public PagedResponse<OrderDTO> getAllOrders(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orderPage = orderRepository.findAll(pageable);
+
+        List<OrderDTO> orderDTOs = orderPage.getContent().stream()
+                .map(OrderMapper::toDto)
+                .collect(Collectors.toList());
+
+        return new PagedResponse<>(
+                orderDTOs,
+                orderPage.getNumber(),
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages(),
+                orderPage.isLast()
+        );
     }
     public OrderDTO getOrder(Long id) {
         Order order = orderRepository.findById(id)
@@ -56,9 +78,7 @@ public class OrderService {
         return orderDTO;
     }
 
-
-
-    private List<Item> getOrderLineItems(OrderDTO orderDTO, Order order) {
+    private List<Item> getOrderItems(OrderDTO orderDTO, Order order) {
         List<Item> items = orderDTO.getItems().stream().map(itemDTO -> {
             Long id = itemDTO.getProductId();
             Product product = productRepository.findById(id)
@@ -83,15 +103,7 @@ public class OrderService {
         });
         orderRepository.delete(order);
     }
-    @Async
-    public void sendOrderConfirmationEmail(Long orderId) {
-        System.out.println("Sending confirmation email for order ID: " + orderId);
-        try {
-            Thread.sleep(1000); // Simulate I/O delay
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
+
     @Transactional
     public OrderDTO updateOrder(Long id, OrderDTO orderDTO) {
         Order order = orderRepository.findById(id)
@@ -105,7 +117,7 @@ public class OrderService {
             product.setStock(product.getStock() + item.getQuantity());
         });
         order.getItems().clear();
-        List<Item> items = getOrderLineItems(orderDTO, order);
+        List<Item> items = getOrderItems(orderDTO, order);
         order.setItems(items);
         orderRepository.save(order);
         productRepository.saveAll(items.stream().map(Item::getProduct).collect(Collectors.toList()));

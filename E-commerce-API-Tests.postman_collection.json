@@ -1,0 +1,613 @@
+{
+	"info": {
+		"_postman_id": "ec48d2c3-9051-49f8-8d93-13a1692091cd",
+		"name": "E-commerce API Tests",
+		"description": "Postman collection to test the Product, Order, and Item APIs of the Spring Boot e-commerce application.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2223963"
+	},
+	"item": [
+		{
+			"name": "Product APIs",
+			"item": [
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has product details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.be.a('number');",
+									"    pm.expect(jsonData.name).to.equal('Laptop');",
+									"    pm.expect(jsonData.price).to.equal(999.99);",
+									"    pm.expect(jsonData.stock).to.equal(50);",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"    pm.expect(jsonData.updatedAt).to.not.be.undefined;",
+									"});",
+									"",
+									"// Save product ID for later use",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('productId', jsonData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Laptop\",\n    \"price\": 999.99,\n    \"stock\": 50\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct product details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.equal(parseInt(pm.environment.get('productId')));",
+									"    pm.expect(jsonData.name).to.equal('Laptop');",
+									"    pm.expect(jsonData.price).to.equal(999.99);",
+									"    pm.expect(jsonData.stock).to.equal(50);",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"    pm.expect(jsonData.updatedAt).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products (Paginated)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.content).to.be.an('array');",
+									"    pm.expect(jsonData.page).to.equal(0);",
+									"    pm.expect(jsonData.size).to.equal(10);",
+									"    pm.expect(jsonData.totalElements).to.be.a('number');",
+									"    pm.expect(jsonData.totalPages).to.be.a('number');",
+									"    pm.expect(jsonData.last).to.be.a('boolean');",
+									"});",
+									"",
+									"pm.test(\"Content includes created product\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var product = jsonData.content.find(p => p.id === parseInt(pm.environment.get('productId')));",
+									"    if (product) {",
+									"        pm.expect(product.name).to.equal('Laptop');",
+									"        pm.expect(product.price).to.equal(999.99);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has updated product details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.equal(parseInt(pm.environment.get('productId')));",
+									"    pm.expect(jsonData.name).to.equal('Laptop Pro');",
+									"    pm.expect(jsonData.price).to.equal(1299.99);",
+									"    pm.expect(jsonData.stock).to.equal(40);",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"    pm.expect(jsonData.updatedAt).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Laptop Pro\",\n    \"price\": 1299.99,\n    \"stock\": 40\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Order APIs",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has order details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.be.a('number');",
+									"    pm.expect(jsonData.orderNumber).to.equal('ORD123');",
+									"    pm.expect(jsonData.items).to.be.an('array').that.has.lengthOf(1);",
+									"    pm.expect(jsonData.items[0].quantity).to.equal(2);",
+									"    pm.expect(jsonData.items[0].productId).to.equal(parseInt(pm.environment.get('productId')));",
+									"    pm.expect(jsonData.items[0].status).to.equal('ORDERED');",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"    pm.expect(jsonData.updatedAt).to.not.be.undefined;",
+									"});",
+									"",
+									"// Save order ID for later use",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('orderId', jsonData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderNumber\": \"ORD123\",\n    \"items\": [\n        {\n            \"quantity\": 2,\n            \"productId\": {{productId}},\n            \"price\": 999.99,\n            \"discount\": 100.00,\n            \"tax\": 79.99,\n            \"status\": \"ORDERED\",\n            \"notes\": \"Gift wrap with red ribbon\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct order details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.equal(parseInt(pm.environment.get('orderId')));",
+									"    pm.expect(jsonData.orderNumber).to.equal('ORD123');",
+									"    pm.expect(jsonData.items).to.be.an('array').that.has.lengthOf(1);",
+									"    pm.expect(jsonData.items[0].status).to.equal('ORDERED');",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"    pm.expect(jsonData.updatedAt).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Orders (Paginated)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.content).to.be.an('array');",
+									"    pm.expect(jsonData.page).to.equal(0);",
+									"    pm.expect(jsonData.size).to.equal(10);",
+									"    pm.expect(jsonData.totalElements).to.be.a('number');",
+									"    pm.expect(jsonData.totalPages).to.be.a('number');",
+									"    pm.expect(jsonData.last).to.be.a('boolean');",
+									"});",
+									"",
+									"pm.test(\"Content includes created order\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var order = jsonData.content.find(o => o.id === parseInt(pm.environment.get('orderId')));",
+									"    if (order) {",
+									"        pm.expect(order.orderNumber).to.equal('ORD123');",
+									"        pm.expect(order.items[0].status).to.equal('ORDERED');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/orders?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has updated order details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.equal(parseInt(pm.environment.get('orderId')));",
+									"    pm.expect(jsonData.orderNumber).to.equal('ORD124');",
+									"    pm.expect(jsonData.items).to.be.an('array').that.has.lengthOf(1);",
+									"    pm.expect(jsonData.items[0].quantity).to.equal(3);",
+									"    pm.expect(jsonData.items[0].status).to.equal('SHIPPED');",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"    pm.expect(jsonData.updatedAt).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderNumber\": \"ORD124\",\n    \"items\": [\n        {\n            \"quantity\": 3,\n            \"productId\": {{productId}},\n            \"price\": 999.99,\n            \"discount\": 50.00,\n            \"tax\": 79.99,\n            \"status\": \"SHIPPED\",\n            \"notes\": \"Updated gift wrap\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Item APIs",
+			"item": [
+				{
+					"name": "Add Item to Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has item details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.be.a('number');",
+									"    pm.expect(jsonData.quantity).to.equal(1);",
+									"    pm.expect(jsonData.productId).to.equal(parseInt(pm.environment.get('productId')));",
+									"    pm.expect(jsonData.status).to.equal('SHIPPED');",
+									"    pm.expect(jsonData.notes).to.equal('Express delivery');",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"    pm.expect(jsonData.updatedAt).to.not.be.undefined;",
+									"});",
+									"",
+									"// Save item ID for later use",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('itemId', jsonData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 1,\n    \"productId\": {{productId}},\n    \"price\": 999.99,\n    \"discount\": 0.00,\n    \"tax\": 79.99,\n    \"status\": \"SHIPPED\",\n    \"notes\": \"Express delivery\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/{{orderId}}/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{orderId}}",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Items by Order ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct item details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    var item = jsonData.find(i => i.id === parseInt(pm.environment.get('itemId')));",
+									"    if (item) {",
+									"        pm.expect(item.quantity).to.equal(1);",
+									"        pm.expect(item.status).to.equal('SHIPPED');",
+									"        pm.expect(item.notes).to.equal('Express delivery');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/{{orderId}}/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{orderId}}",
+								"items"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		}
+	]
+}
