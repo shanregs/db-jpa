@@ -2,13 +2,12 @@ package com.shan.sb.db.dbjpa.service;
 
 import com.shan.sb.db.dbjpa.dto.OrderDTO;
 import com.shan.sb.db.dbjpa.entity.Order;
-import com.shan.sb.db.dbjpa.entity.OrderLineItem;
+import com.shan.sb.db.dbjpa.entity.Item;
 import com.shan.sb.db.dbjpa.entity.Product;
 import com.shan.sb.db.dbjpa.exception.InsufficientStockException;
 import com.shan.sb.db.dbjpa.exception.ResourceNotFoundException;
-import com.shan.sb.db.dbjpa.mapper.OrderLineItemMapper;
+import com.shan.sb.db.dbjpa.mapper.ItemMapper;
 import com.shan.sb.db.dbjpa.mapper.OrderMapper;
-import com.shan.sb.db.dbjpa.repository.OrderItemRepository;
 import com.shan.sb.db.dbjpa.repository.OrderRepository;
 import com.shan.sb.db.dbjpa.repository.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -17,10 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +24,7 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final OrderLineItemService orderLineItemService;
+    private final ItemService itemService;
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
@@ -39,11 +35,11 @@ public class OrderService {
         Order order = new Order();
         order.setOrderNumber(orderDTO.getOrderNumber());
 
-        List<OrderLineItem> items = getOrderLineItems(orderDTO, order);
+        List<Item> items = getOrderLineItems(orderDTO, order);
 
         order.setItems(items);
         orderRepository.save(order);
-        List<Product> productList = items.stream().map(OrderLineItem::getProduct).collect(Collectors.toList());
+        List<Product> productList = items.stream().map(Item::getProduct).collect(Collectors.toList());
         if(!CollectionUtils.isEmpty(productList)) {
             productRepository.saveAll(productList);
         }
@@ -62,8 +58,8 @@ public class OrderService {
 
 
 
-    private List<OrderLineItem> getOrderLineItems(OrderDTO orderDTO, Order order) {
-        List<OrderLineItem> items = orderDTO.getItems().stream().map(itemDTO -> {
+    private List<Item> getOrderLineItems(OrderDTO orderDTO, Order order) {
+        List<Item> items = orderDTO.getItems().stream().map(itemDTO -> {
             Long id = itemDTO.getProductId();
             Product product = productRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + id));
@@ -71,7 +67,7 @@ public class OrderService {
                 throw new InsufficientStockException("Insufficient stock for product: " + product.getName());
             }
             product.setStock(product.getStock() - itemDTO.getQuantity());
-            OrderLineItem item = OrderLineItemMapper.to(itemDTO, product, order);
+            Item item = ItemMapper.toItem(itemDTO, product, order);
             return item;
         }).collect(Collectors.toList());
         return items;
@@ -109,10 +105,10 @@ public class OrderService {
             product.setStock(product.getStock() + item.getQuantity());
         });
         order.getItems().clear();
-        List<OrderLineItem> items = getOrderLineItems(orderDTO, order);
+        List<Item> items = getOrderLineItems(orderDTO, order);
         order.setItems(items);
         orderRepository.save(order);
-        productRepository.saveAll(items.stream().map(OrderLineItem::getProduct).collect(Collectors.toList()));
+        productRepository.saveAll(items.stream().map(Item::getProduct).collect(Collectors.toList()));
 
         orderDTO.setId(order.getId());
         orderDTO.setCreatedAt(order.getCreatedAt());

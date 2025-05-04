@@ -8,7 +8,7 @@ import lombok.Setter;
 @Table(name = "order_items")
 @Getter
 @Setter
-public class OrderLineItem extends AuditableEntity{
+public class Item extends AuditableEntity{
 
     @Column(nullable = false)
     private int quantity;

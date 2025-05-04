@@ -10,7 +10,7 @@ public class OrderMapper {
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setId(order.getId());
         orderDTO.setOrderNumber(order.getOrderNumber());
-        orderDTO.setItems(order.getItems().stream().map(OrderLineItemMapper::toDto).collect(Collectors.toList()));
+        orderDTO.setItems(order.getItems().stream().map(ItemMapper::toDTO).collect(Collectors.toList()));
         orderDTO.setCreatedAt(order.getCreatedAt());
         orderDTO.setUpdatedAt(order.getUpdatedAt());
         return orderDTO;

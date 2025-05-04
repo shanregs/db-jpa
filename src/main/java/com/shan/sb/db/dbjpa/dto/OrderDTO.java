@@ -18,7 +18,7 @@ public class OrderDTO {
     private String orderNumber;
 
     @NotEmpty(message = "Order must contain at least one item")
-    private List<OrderLineItemDTO> items;
+    private List<ItemDTO> items;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

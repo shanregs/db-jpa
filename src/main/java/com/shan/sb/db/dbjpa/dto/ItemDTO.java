@@ -10,7 +10,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Getter @Setter
-public class OrderLineItemDTO {
+public class ItemDTO {
     private Long id;
 
     @Min(value = 1, message = "Quantity must be at least 1")

@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,5 +18,5 @@ public class Order extends AuditableEntity {
     private String orderNumber;
 
     @OneToMany(mappedBy = "order",  cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-    private List<OrderLineItem> items = new ArrayList<>();
+    private List<Item> items = new ArrayList<>();
 }
